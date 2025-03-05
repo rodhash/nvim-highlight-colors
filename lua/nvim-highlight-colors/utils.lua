@@ -36,7 +36,7 @@ end
 ---@param color_value string
 ---@return string
 function M.create_highlight_name(color_value)
-	return 'nvim-highlight-colors-' .. string.gsub(color_value, "#", ""):gsub("[!(),%s%.-/%%=:\"'%%;#]+", "")
+	return 'nvim-highlight-colors-' .. string.gsub(color_value, "#", ""):gsub("[!(),%s%.-/%%=:\"']+", "")
 end
 
 ---Creates the highlight based on the received params
@@ -96,12 +96,12 @@ function M.create_highlight(active_buffer_id, ns_id, data, options)
 	)
 end
 
----Highlights extmarks 
+---Highlights extmarks
 ---@param active_buffer_id number
 ---@param ns_id number
 ---@param data {row: number, start_column: number, end_column: number, value: string}
 ---@param highlight_group string
----@param options {custom_colors: table, render: string, virtual_symbol: string, virtual_symbol_prefix: string, virtual_symbol_suffix: string, virtual_symbol_position: 'inline' | 'eol' | 'eow', enable_short_hex: boolean}
+---@param options {custom_colors: table, dark_colors: table, render: string, replace_symbol: string, virtual_symbol: string, virtual_symbol_prefix: string, virtual_symbol_suffix: string, virtual_symbol_position: 'inline' | 'eol' | 'eow', enable_short_hex: boolean}
 function M.highlight_extmarks(active_buffer_id, ns_id, data, highlight_group, options)
 	local start_extmark_row = data.row + 1
 	local start_extmark_column = data.start_column - 1
@@ -140,21 +140,44 @@ function M.highlight_extmarks(active_buffer_id, ns_id, data, highlight_group, op
 		)
 	end
 
-	vim.api.nvim_buf_set_extmark(
-		active_buffer_id,
-		ns_id,
-		start_extmark_row,
-		virtual_text_column,
-		{
+  -- Adding secondary glyph for dark colors
+  local color_value = colors.get_color_value(data.value, 2, options.custom_colors, options.enable_short_hex)
 
-			virt_text_pos = virtual_text_position == 'eow' and 'inline' or virtual_text_position,
-			virt_text = {{
-				options.virtual_symbol_prefix .. options.virtual_symbol .. options.virtual_symbol_suffix,
-				vim.api.nvim_get_hl_id_by_name(highlight_group)
-			}},
-			hl_mode = "combine",
-		}
-	)
+  if options.dark_colors[color_value] then
+    vim.api.nvim_buf_set_extmark(
+      active_buffer_id,
+      ns_id,
+      start_extmark_row,
+      virtual_text_column,
+      {
+
+        virt_text_pos = virtual_text_position == 'eow' and 'inline' or virtual_text_position,
+        virt_text = {{
+          options.virtual_symbol_prefix .. options.replace_symbol .. options.virtual_symbol_suffix,
+          vim.api.nvim_get_hl_id_by_name('SpecialKey')
+        }},
+        hl_mode = "combine",
+      }
+    )
+  else
+    vim.api.nvim_buf_set_extmark(
+      active_buffer_id,
+      ns_id,
+      start_extmark_row,
+      virtual_text_column,
+      {
+
+        virt_text_pos = virtual_text_position == 'eow' and 'inline' or virtual_text_position,
+        virt_text = {{
+          options.virtual_symbol_prefix .. options.virtual_symbol .. options.virtual_symbol_suffix,
+          vim.api.nvim_get_hl_id_by_name(highlight_group)
+        }},
+        hl_mode = "combine",
+      }
+    )
+
+  end
+
 end
 
 ---Returns the virtual text(extmark) position based on the user preferences
