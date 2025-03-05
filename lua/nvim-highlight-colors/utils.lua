@@ -9,6 +9,18 @@ local M = {
 	}
 }
 
+local dark_colors = {}
+
+for r = 0, 15 do -- Low red values (0 to 15)
+  for g = 0, 15 do -- Low green values (0 to 15)
+    for b = 0, 15 do -- Low blue values (0 to 15)
+      local hex_color = string.format("#%02x%02x%02x", r, g, b)
+      dark_colors[hex_color] = true
+    end
+  end
+end
+
+
 ---Returns the last row index of the current buffer
 ---@return number
 function M.get_last_row_index()
@@ -55,6 +67,10 @@ function M.create_highlight(active_buffer_id, ns_id, data, options)
 		return
 	end
 
+  if dark_colors[color_value] then
+    color_value = '#252525'
+  end
+
 	local highlight_group = M.create_highlight_name(options.render .. data.value .. color_value)
 
 	if options.render == M.render_options.background then
@@ -82,6 +98,18 @@ function M.create_highlight(active_buffer_id, ns_id, data, options)
 		)
 		return
 	end
+  -- virtual
+		pcall(
+			M.highlight_extmarks,
+			active_buffer_id,
+			ns_id,
+			data,
+			highlight_group,
+			options
+		)
+		return
+
+  -- foreground
 	pcall(
 		function()
 			vim.api.nvim_buf_add_highlight(
