@@ -120,7 +120,7 @@ function M.highlight_colors(min_row, max_row, active_buffer_id)
 		)
 	end
 
-	utils.highlight_with_lsp(active_buffer_id, ns_id, positions, options)
+	-- utils.highlight_with_lsp(active_buffer_id, ns_id, positions, options)
 end
 
 
